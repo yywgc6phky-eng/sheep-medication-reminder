@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>متابعة جرعات الضان</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f6f0;--card:#fff;--ink:#1d2b24;--mute:#66756c;--g:#1f5d46;--p:#6b4aa0;--line:#dbe4dc;--warn:#b4491f;--ok:#1f7a4d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a16;--card:#1b2620;--ink:#e6efe8;--mute:#93a49a;--g:#5fbf94;--p:#b79be6;--line:#2c3a32;--warn:#ee8a5e;--ok:#5fbf94}}
+:root[data-theme="dark"]{--bg:#121a16;--card:#1b2620;--ink:#e6efe8;--mute:#93a49a;--g:#5fbf94;--p:#b79be6;--line:#2c3a32;--warn:#ee8a5e;--ok:#5fbf94}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Tajawal",Tahoma,Arial,sans-serif;line-height:1.6}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:8px 0 2px;color:var(--g)}
+p.sub{margin:0 0 14px;color:var(--mute);font-size:.95rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+h2{font-size:1.05rem;margin:0 0 10px}
+label{display:block;font-size:.85rem;color:var(--mute);margin:8px 0 3px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+.row{display:flex;gap:8px}.row>*{flex:1}
+button{font:inherit;border:0;border-radius:10px;padding:9px 14px;cursor:pointer;background:var(--g);color:#fff}
+button.alt{background:transparent;color:var(--p);border:1px solid var(--p)}
+button.danger{background:transparent;color:var(--warn);border:1px solid var(--warn)}
+button.small{padding:5px 10px;font-size:.85rem}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.chip.on{background:var(--p);color:#fff;border-color:var(--p)}
+.dose{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}
+.dose.due{border-color:var(--warn);border-width:2px}
+.dose .t{display:flex;justify-content:space-between;gap:8px;font-weight:700}
+.dose .m{color:var(--mute);font-size:.9rem}
+.tag{font-size:.8rem;padding:1px 8px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.tag.taken{color:var(--ok)}.tag.missed{color:var(--warn)}.tag.pending{color:var(--p)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.banner{background:var(--warn);color:#fff;border-radius:12px;padding:10px 12px;margin-bottom:14px;display:none}
+.empty{color:var(--mute);text-align:center;padding:14px 0}
+.sheepline{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.sheepline:last-child{border:0}
+</style>
+</head>
+<body>
+<main>
+<h1>🐑 متابعة جرعات الضان</h1>
+<p class="sub">سجّل الدواء والجرعة والموعد، وتابع السجل لكل ضانية.</p>
+
+<div class="banner" id="banner" role="alert"></div>
+
+<section>
+  <h2>الضان</h2>
+  <div class="row"><input id="sheepName" placeholder="اسم الضان أو رقمه"><button id="addSheep" style="flex:0 0 auto">إضافة</button></div>
+  <div id="sheepList" style="margin-top:8px"></div>
+</section>
+
+<section>
+  <h2>الأوزان</h2>
+  <label for="wSheep">الضان</label><select id="wSheep"></select>
+  <div class="row"><div><label for="wKg">الوزن (كجم)</label><input id="wKg" type="number" step="0.1" min="0" inputmode="decimal"></div><div><label for="wAt">التاريخ</label><input id="wAt" type="date"></div></div>
+  <div class="acts"><button id="addW">تسجيل الوزن</button></div>
+  <div id="wList" style="margin-top:8px"></div>
+</section>
+
+<section>
+  <h2 id="formTitle">جرعة جديدة</h2>
+  <label for="fSheep">الضان</label><select id="fSheep"></select>
+  <label for="fDrug">اسم الدواء</label><input id="fDrug" placeholder="مثال: أيفرمكتين">
+  <label for="fAmount">الجرعة</label><input id="fAmount" placeholder="مثال: 2 مل">
+  <label for="fType">النوع</label><select id="fType"><option value="drug">علاج</option><option value="vax">تطعيم</option></select>
+  <label for="fAt">موعد الجرعة</label><input id="fAt" type="datetime-local">
+  <div class="row"><div><label for="fMeat">سحب اللحم (أيام)</label><input id="fMeat" type="number" min="0" inputmode="numeric"></div><div><label for="fMilk">سحب الحليب (أيام)</label><input id="fMilk" type="number" min="0" inputmode="numeric"></div></div>
+  <label for="fRep">تكرار الجرعة كل (أيام) - اختياري</label><input id="fRep" type="number" min="1" inputmode="numeric" placeholder="مثال: 21 للتطعيم المعزز">
+  <div class="acts"><button id="saveDose">حفظ الجرعة</button><button class="alt" id="cancelEdit" style="display:none">إلغاء التعديل</button><button class="alt" id="notif">تفعيل التنبيهات</button></div>
+</section>
+
+<section>
+  <h2>الجرعات</h2>
+  <label for="fFilter">عرض ضان معيّن</label><select id="fFilter"></select>
+  <div class="chips" style="margin-top:10px" id="chips"></div>
+  <div id="doseList"></div>
+</section>
+</main>
+
+<script>
+(function(){
+var KEY="sheepDoses.v1",S={sheep:[],doses:[],weights:[]},view="upcoming",editId=null,notified={};
+function load(){try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&d.sheep&&d.doses){S=d;S.weights=S.weights||[]}}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function sName(id){var s=S.sheep.find(function(x){return x.id===id});return s?s.name:"—"}
+function fmt(iso){try{return new Date(iso).toLocaleString("ar-SD",{dateStyle:"medium",timeStyle:"short"})}catch(e){return iso}}
+function toLocalInput(d){var p=function(n){return String(n).padStart(2,"0")};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes())}
+function wd(d){if(d.status!=="taken"||!d.takenAt)return{};var t=new Date(d.takenAt).getTime(),o={};
+  if(+d.meat>0)o.meat=new Date(t+d.meat*864e5);if(+d.milk>0)o.milk=new Date(t+d.milk*864e5);return o}
+function dday(x){return x.toLocaleDateString("ar-SD",{dateStyle:"medium"})}
+function sheepWD(id){var m=null,k=null,now=new Date();S.doses.forEach(function(d){if(d.sheepId!==id)return;var w=wd(d);
+  if(w.meat&&w.meat>now&&(!m||w.meat>m))m=w.meat;if(w.milk&&w.milk>now&&(!k||w.milk>k))k=w.milk});return{meat:m,milk:k}}
+var LBL={pending:"قادمة",taken:"تم إعطاؤها",missed:"لم تُعطَ"};
+
+function renderSheep(){
+  var opts=S.sheep.map(function(s){return'<option value="'+s.id+'">'+esc(s.name)+'</option>'}).join("");
+  var cur=$("fSheep").value;$("fSheep").innerHTML=opts||'<option value="">أضف ضان أولاً</option>';if(cur)$("fSheep").value=cur;
+  var f=$("fFilter").value;$("fFilter").innerHTML='<option value="">كل الضان</option>'+opts;$("fFilter").value=f;
+  var wc=$("wSheep").value;$("wSheep").innerHTML=opts||'<option value="">أضف ضان أولاً</option>';if(wc)$("wSheep").value=wc;
+  $("sheepList").innerHTML=S.sheep.length?S.sheep.map(function(s){
+    var n=S.doses.filter(function(d){return d.sheepId===s.id}).length,w=sheepWD(s.id),W="";
+    if(w.meat)W+='<br><small style="color:var(--warn)">⚠️ لا تُذبح قبل '+dday(w.meat)+'</small>';
+    if(w.milk)W+='<br><small style="color:var(--warn)">⚠️ لا يُستخدم حليبها قبل '+dday(w.milk)+'</small>';
+    return'<div class="sheepline"><span>🐑 '+esc(s.name)+' <small style="color:var(--mute)">('+n+' جرعة)</small>'+W+'</span><button class="danger small" data-delsheep="'+s.id+'">حذف</button></div>'
+  }).join(""):'<div class="empty">ما في ضان مضاف لسه</div>';
+}
+function renderDoses(){
+  $("chips").innerHTML=[["upcoming","القادمة"],["history","السجل"],["all","الكل"]].map(function(c){return'<button class="chip'+(view===c[0]?" on":"")+'" data-view="'+c[0]+'">'+c[1]+'</button>'}).join("");
+  var f=$("fFilter").value;
+  var list=S.doses.filter(function(d){
+    if(f&&d.sheepId!==f)return false;
+    if(view==="upcoming")return d.status==="pending";
+    if(view==="history")return d.status!=="pending";
+    return true;
+  }).sort(function(a,b){return view==="history"?(a.at<b.at?1:-1):(a.at<b.at?-1:1)});
+  var now=new Date().toISOString();
+  $("doseList").innerHTML=list.length?list.map(function(d){
+    var due=d.status==="pending"&&new Date(d.at)<=new Date();
+    var a='';
+    if(d.status==="pending")a+='<button class="small" data-st="taken" data-id="'+d.id+'">تم إعطاؤها</button><button class="danger small" data-st="missed" data-id="'+d.id+'">لم تُعطَ</button>';
+    else a+='<button class="alt small" data-st="pending" data-id="'+d.id+'">إرجاع لقادمة</button>';
+    a+='<button class="alt small" data-edit="'+d.id+'">تعديل</button><button class="danger small" data-del="'+d.id+'">حذف</button>';
+    return'<div class="dose'+(due?" due":"")+'"><div class="t"><span>🐑 '+esc(sName(d.sheepId))+'</span><span class="tag '+d.status+'">'+(due?"حان الموعد":LBL[d.status])+'</span></div><div>'+(d.type==="vax"?"💉 تطعيم: ":"💊 ")+esc(d.drug)+' — '+esc(d.amount)+'</div><div class="m">'+fmt(d.at)+(d.rep?' · تتكرر كل '+d.rep+' يوم':'')+'</div>'+wdInfo(d)+'<div class="acts">'+a+'</div></div>'
+  }).join(""):'<div class="empty">'+(view==="history"?"السجل فاضي":"ما في جرعات هنا")+'</div>';
+}
+function wdInfo(d){var w=wd(d),o="";
+  if(d.status==="pending"&&(+d.meat>0||+d.milk>0))o='<div class="m">فترة السحب بعد الإعطاء: '+(+d.meat>0?'لحم '+d.meat+' يوم ':'')+(+d.milk>0?'حليب '+d.milk+' يوم':'')+'</div>';
+  if(w.meat)o+='<div class="m" style="color:'+(w.meat>new Date()?'var(--warn)':'var(--ok)')+'">اللحم آمن من: '+dday(w.meat)+'</div>';
+  if(w.milk)o+='<div class="m" style="color:'+(w.milk>new Date()?'var(--warn)':'var(--ok)')+'">الحليب آمن من: '+dday(w.milk)+'</div>';
+  return o}
+function renderW(){var id=$("wSheep").value,L=S.weights.filter(function(x){return x.sheepId===id}).sort(function(a,b){return a.at<b.at?1:-1});
+  $("wList").innerHTML=L.length?L.map(function(x,i){var p=L[i+1],df=p?(x.kg-p.kg):null;
+    return'<div class="sheepline"><span>⚖️ '+x.kg+' كجم <small style="color:var(--mute)">'+dday(new Date(x.at))+'</small>'+(df===null?'':' <small style="color:'+(df>=0?'var(--ok)':'var(--warn)')+'">('+(df>=0?'+':'')+df.toFixed(1)+')</small>')+'</span><button class="danger small" data-delw="'+x.id+'">حذف</button></div>'}).join(""):'<div class="empty">ما في أوزان مسجلة</div>'}
+function checkDue(){
+  var due=S.doses.filter(function(d){return d.status==="pending"&&new Date(d.at)<=new Date()});
+  var b=$("banner");
+  if(due.length){b.style.display="block";b.textContent="⏰ في "+due.length+" جرعة حان موعدها: "+due.slice(0,3).map(function(d){return sName(d.sheepId)+" ("+d.drug+")"}).join("، ")}
+  else b.style.display="none";
+  due.forEach(function(d){
+    if(notified[d.id])return;notified[d.id]=1;
+    try{if("Notification" in window&&Notification.permission==="granted")new Notification("حان موعد الجرعة",{body:sName(d.sheepId)+" — "+d.drug+" "+d.amount})}catch(e){}
+  });
+}
+function render(){renderSheep();renderW();renderDoses();checkDue()}
+function resetForm(){editId=null;$("fDrug").value="";$("fAmount").value="";$("fMeat").value="";$("fMilk").value="";$("fRep").value="";$("fType").value="drug";$("fAt").value=toLocalInput(new Date());$("formTitle").textContent="جرعة جديدة";$("saveDose").textContent="حفظ الجرعة";$("cancelEdit").style.display="none"}
+
+$("addSheep").onclick=function(){var n=$("sheepName").value.trim();if(!n)return;S.sheep.push({id:uid(),name:n});$("sheepName").value="";save();render()};
+$("saveDose").onclick=function(){
+  var sid=$("fSheep").value,drug=$("fDrug").value.trim(),amt=$("fAmount").value.trim(),at=$("fAt").value;
+  if(!sid||!drug||!amt||!at){alert("عبّي كل الحقول: الضان، الدواء، الجرعة، الموعد");return}
+  var iso=new Date(at).toISOString(),ex={type:$("fType").value,meat:+$("fMeat").value||0,milk:+$("fMilk").value||0,rep:+$("fRep").value||0};
+  if(editId){var d=S.doses.find(function(x){return x.id===editId});if(d){d.sheepId=sid;d.drug=drug;d.amount=amt;d.at=iso;d.type=ex.type;d.meat=ex.meat;d.milk=ex.milk;d.rep=ex.rep}delete notified[editId]}
+  else S.doses.push({id:uid(),sheepId:sid,drug:drug,amount:amt,at:iso,status:"pending",type:ex.type,meat:ex.meat,milk:ex.milk,rep:ex.rep});
+  save();resetForm();render()
+};
+$("cancelEdit").onclick=resetForm;
+$("wSheep").onchange=renderW;$("wAt").value=toLocalInput(new Date()).slice(0,10);
+$("addW").onclick=function(){var id=$("wSheep").value,kg=parseFloat($("wKg").value),at=$("wAt").value;if(!id||!(kg>0)||!at){alert("اختر الضان واكتب الوزن والتاريخ");return}
+  S.weights.push({id:uid(),sheepId:id,kg:kg,at:new Date(at).toISOString()});$("wKg").value="";save();renderW()};
+$("fFilter").onchange=renderDoses;
+$("notif").onclick=function(){
+  try{if(!("Notification" in window)){alert("المتصفح ما بدعم التنبيهات. التنبيه بيظهر داخل الصفحة.");return}
+  Notification.requestPermission().then(function(p){alert(p==="granted"?"تم تفعيل التنبيهات (بتشتغل والصفحة مفتوحة)":"ما تم السماح بالتنبيهات")})}catch(e){}
+};
+document.addEventListener("click",function(e){
+  var t=e.target,id;
+  if(t.dataset.delw){S.weights=S.weights.filter(function(x){return x.id!==t.dataset.delw});save();renderW();return}
+  if(t.dataset.view){view=t.dataset.view;renderDoses();return}
+  if(t.dataset.st){var d=S.doses.find(function(x){return x.id===t.dataset.id});if(d){d.status=t.dataset.st;
+    if(d.status==="taken"){d.takenAt=new Date().toISOString();
+      if(+d.rep>0&&!d.nextMade){d.nextMade=1;S.doses.push({id:uid(),sheepId:d.sheepId,drug:d.drug,amount:d.amount,at:new Date(Date.now()+d.rep*864e5).toISOString(),status:"pending",type:d.type,meat:d.meat,milk:d.milk,rep:d.rep})}}
+    else delete d.takenAt;
+    save();render()}return}
+  if(t.dataset.del){if(confirm("حذف الجرعة؟")){S.doses=S.doses.filter(function(x){return x.id!==t.dataset.del});save();render()}return}
+  if(t.dataset.delsheep){if(confirm("حذف الضان وكل جرعاته؟")){id=t.dataset.delsheep;S.sheep=S.sheep.filter(function(x){return x.id!==id});S.doses=S.doses.filter(function(x){return x.sheepId!==id});S.weights=S.weights.filter(function(x){return x.sheepId!==id});save();render()}return}
+  if(t.dataset.edit){var d2=S.doses.find(function(x){return x.id===t.dataset.edit});if(!d2)return;editId=d2.id;$("fSheep").value=d2.sheepId;$("fDrug").value=d2.drug;$("fAmount").value=d2.amount;$("fType").value=d2.type||"drug";$("fMeat").value=d2.meat||"";$("fMilk").value=d2.milk||"";$("fRep").value=d2.rep||"";$("fAt").value=toLocalInput(new Date(d2.at));$("formTitle").textContent="تعديل الجرعة";$("saveDose").textContent="حفظ التعديل";$("cancelEdit").style.display="inline-block";$("fDrug").scrollIntoView({behavior:"smooth",block:"center"})}
+});
+load();resetForm();render();setInterval(function(){checkDue();renderDoses()},30000);
+})();
+</script>
+</body>
+</html>
